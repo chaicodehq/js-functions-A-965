@@ -40,13 +40,73 @@
  *   // => { totalCustomers: 3, totalRevenue: 7200, mealBreakdown: { veg: 2, nonveg: 1 } }
  */
 export function createTiffinPlan({ name, mealType = "veg", days = 30 } = {}) {
-  // Your code here
+  if (typeof name !== "string" || name.trim() === "") return null;
+
+  const rates = {
+    veg: 80,
+    nonveg: 120,
+    jain: 90
+  };
+
+  if (!rates.hasOwnProperty(mealType)) return null;
+  if (typeof days !== "number" || days <= 0) return null;
+
+  const dailyRate = rates[mealType];
+  const totalCost = dailyRate * days;
+
+  return { name, mealType, days, dailyRate, totalCost };
 }
 
 export function combinePlans(...plans) {
-  // Your code here
+  if (!plans || plans.length === 0) return null;
+
+  const validPlans = plans.filter(
+    p => p && typeof p === "object" && typeof p.totalCost === "number"
+  );
+
+  if (validPlans.length === 0) return null;
+
+  const totalCustomers = validPlans.length;
+
+  const totalRevenue = validPlans.reduce(
+    (sum, plan) => sum + plan.totalCost,
+    0
+  );
+
+  const mealBreakdown = validPlans.reduce((acc, plan) => {
+    acc[plan.mealType] = (acc[plan.mealType] || 0) + 1;
+    return acc;
+  }, {});
+
+  return { totalCustomers, totalRevenue, mealBreakdown };
 }
 
 export function applyAddons(plan, ...addons) {
-  // Your code here
+  if (!plan || typeof plan !== "object") return null;
+
+  const validAddons = addons.filter(
+    addon =>
+      addon &&
+      typeof addon === "object" &&
+      typeof addon.price === "number" &&
+      addon.price > 0
+  );
+
+  const addonTotalPerDay = validAddons.reduce(
+    (sum, addon) => sum + addon.price,
+    0
+  );
+
+  const addonNames = validAddons.map(addon => addon.name);
+
+  const newDailyRate = plan.dailyRate + addonTotalPerDay;
+  const newTotalCost = newDailyRate * plan.days;
+
+  return {
+    ...plan,
+    dailyRate: newDailyRate,
+    totalCost: newTotalCost,
+    addonNames
+  };
 }
+
